@@ -1,0 +1,404 @@
+---
+title: "Untitled"
+output:
+  html_document: default
+  pdf_document: default
+date: "2022-11-24"
+---
+```{r}
+library(tidyverse)
+library(janitor)
+library(colorspace)
+library(extrafont)
+```
+
+# 파일 불러오기
+```{r}
+sd_clust <- read.csv('D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/standard_final.csv', header = TRUE, fileEncoding = 'cp949')
+```
+
+```{r}
+sd_clust %>% str()
+```
+
+
+# k_medoids_3일때 분포 확인
+
+## 용도지역
+```{r}
+plot1 <- sd_clust %>% select(starts_with('용도지역_'))
+plot1$k_medoids_3 <- sd_clust$k_medoids_3
+
+live_3 <- plot1 %>% group_by(k_medoids_3) %>%
+  summarise('일반상업' = sum(용도지역_일반상업),
+            '일반전용주거' = sum(용도지역_일반전용주거),
+            '전용주거' = sum(용도지역_전용주거),
+            '준전용주거' = sum(용도지역_준전용주거))
+
+live_3 <- live_3 %>% as.matrix() %>% t() %>% 
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+```{r}
+barplot(as.matrix(live_3[, c('0','1','2')]), beside = T, col = sequential_hcl(4, 'ag_GrnYl'))
+
+legend('topright', legend = dimnames(live_3)[[1]], fill = sequential_hcl(4, 'ag_GrnYl'), border = 'white', cex = 0.9)
+
+title(main = '클러스터별 용도지역 분포',
+      sub = 'k-medoids = 3')
+```
+
+## 유동인구
+```{r}
+pp_3 <- sd_clust %>% select(유동인구, k_medoids_3)
+
+people_3 <- pp_3 %>% group_by(k_medoids_3) %>%
+  summarise('평균유동인구' = mean(유동인구)) %>% 
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 주차면수
+```{r}
+car_pk_3 <- sd_clust %>% select(주차.면수, k_medoids_3) 
+
+parking_3 <- car_pk_3 %>% group_by(k_medoids_3) %>%
+  summarise('평균주차면수' = mean(주차.면수)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 매장면적
+```{r}
+st_3 <- sd_clust %>% select(매장면적..., k_medoids_3)
+
+store_3 <- st_3 %>% group_by(k_medoids_3) %>%
+  summarise('평균매장면적' = mean(매장면적...)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+``` 
+
+## 종사자수
+```{r}
+wk_3 <- sd_clust %>% select(종사자.수.명., k_medoids_3)
+
+worker_3 <- wk_3 %>% group_by(k_medoids_3)%>%
+  summarise('평균종사자수' = mean(종사자.수.명.)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 운영중인 매장 수
+```{r}
+op_3 <- sd_clust %>% select(운영중인.점포.계...빈점포., k_medoids_3)
+
+open_3  <- op_3 %>% group_by(k_medoids_3)%>%
+  summarise('평균매장수' = mean(운영중인.점포.계...빈점포.)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+```{r}
+par(mfrow = c(2,3))
+barplot(as.matrix(people_3[, c('0', '1','2')]), beside = T, col = c('grey', 'grey', 'orange'), main = '클러스터별 평균유동인구수', sub = 'k-medoids = 3')
+barplot(as.matrix(parking_3[, c('0', '1','2')]), beside = T, col = c('grey', 'grey', 'orange'), main= '클러스터별 평균주차면적', sub = 'k-medoids = 3')
+barplot(as.matrix(store_3[, c('0', '1','2')]), beside = T, col = c('grey', 'grey', 'orange'), main = '클러스터별 평균매장면적', sub = 'k-medoids = 3')
+barplot(as.matrix(worker_3[, c('0', '1','2')]), beside = T, col = c('grey', 'grey', 'orange'), main = '클러스터별 평균종사자수', sub = 'k-medoids = 3')
+barplot(as.matrix(open_3[, c('0', '1','2')]), beside = T, col = c('grey', 'grey', 'orange'), main = '클러스터별 평균매장수', sub = 'k-medoids = 3')
+```
+
+### 클러스터별 시장명
+```{r}
+me3_0 <- sd_clust %>% subset(k_medoids_3 == 0) %>% subset(select = c('시장명'))
+me3_1 <- sd_clust %>% subset(k_medoids_3 == 1) %>% subset(select = c('시장명'))
+me3_2 <- sd_clust %>% subset(k_medoids_3 == 2) %>% subset(select = c('시장명'))
+```
+
+
+# k_medoids = 4일 때
+
+## 용도지역
+```{r}
+plot2 <- sd_clust %>% select(starts_with('용도지역_'))
+plot2$k_medoids_4 <- sd_clust$k_medoids_4
+
+live_4 <- plot2 %>% group_by(k_medoids_4) %>%
+  summarise('일반상업' = sum(용도지역_일반상업),
+            '일반전용주거' = sum(용도지역_일반전용주거),
+            '전용주거' = sum(용도지역_전용주거),
+            '준전용주거' = sum(용도지역_준전용주거))%>% 
+  as.matrix() %>% t() %>% 
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+```{r}
+barplot(as.matrix(live_4[, c('0','1','2','3')]), beside = T, col = c('#2ecd70', '#005251', '#C0FCF9', '#47817E'))
+
+legend('topright', legend = dimnames(live_4)[[1]], fill = c('#2ecd70', '#005251', '#C0FCF9', '#47817E'), border = 'white', cex = 0.9)
+
+title(main = '클러스터별 용도지역 분포',
+      sub = 'k-medoids = 4')
+```
+
+## 유동인구
+```{r}
+pp_4 <- sd_clust %>% select(유동인구, k_medoids_4)
+
+people_4 <- pp_4 %>% group_by(k_medoids_4) %>%
+  summarise('평균유동인구' = mean(유동인구)) %>% 
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 주차면수
+```{r}
+car_pk_4 <- sd_clust %>% select(주차.면수, k_medoids_4) 
+
+parking_4 <- car_pk_4 %>% group_by(k_medoids_4) %>%
+  summarise('평균주차면수' = mean(주차.면수))%>% 
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 매장면적
+```{r}
+st_4 <- sd_clust %>% select(매장면적..., k_medoids_4)
+
+store_4 <- st_4 %>% group_by(k_medoids_4) %>%
+  summarise('평균매장면적' = mean(매장면적...)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+``` 
+
+## 종사자수
+```{r}
+wk_4 <- sd_clust %>% select(종사자.수.명., k_medoids_4)
+
+worker_4 <- wk_4 %>% group_by(k_medoids_4)%>%
+  summarise('평균종사자수' = mean(종사자.수.명.)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 운영중인 매장 수
+```{r}
+op_4 <- sd_clust %>% select(운영중인.점포.계...빈점포., k_medoids_4)
+
+open_4  <- op_4 %>% group_by(k_medoids_4)%>%
+  summarise('평균매장수' = mean(운영중인.점포.계...빈점포.)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+
+```{r}
+par(mfrow = c(2,3))
+barplot(as.matrix(people_4[, c('0', '1','2', '3')]), beside = T, col = c('#2ECD70', '#F1FCF3', '#F1FCF3', '#F1FCF3'), main = '클러스터별 평균유동인구수', sub = 'k-medoids = 4')
+barplot(as.matrix(parking_4[, c('0', '1','2', '3')]), beside = T, col = c('#2ECD70', '#F1FCF3', '#F1FCF3', '#F1FCF3'), main= '클러스터별 평균주차면적', sub = 'k-medoids = 4')
+barplot(as.matrix(store_4[, c('0', '1','2', '3')]), beside = T, col = c('#2ECD70', '#F1FCF3', '#F1FCF3', '#F1FCF3'), main = '클러스터별 평균매장면적', sub = 'k-medoids = 4')
+barplot(as.matrix(worker_4[, c('0', '1','2', '3')]), beside = T, col = c('#2ECD70', '#F1FCF3', '#F1FCF3', '#F1FCF3'), main = '클러스터별 평균종사자수', sub = 'k-medoids = 4')
+barplot(as.matrix(open_4[, c('0', '1','2', '3')]), beside = T, col = c('#2ECD70', '#F1FCF3', '#F1FCF3', '#F1FCF3'), main = '클러스터별 평균매장수', sub = 'k-medoids = 4')
+```
+
+### 클러스터별 시장명_유동인구
+```{r}
+me4_0 <- sd_clust %>% subset(k_medoids_4 == 0) %>% subset(select = c('시장명', '유동인구'))
+me4_1 <- sd_clust %>% subset(k_medoids_4 == 1) %>% subset(select = c('시장명', '유동인구'))
+me4_2 <- sd_clust %>% subset(k_medoids_4 == 2) %>% subset(select = c('시장명', '유동인구'))
+me4_3 <- sd_clust %>% subset(k_medoids_4 == 3) %>% subset(select = c('시장명', '유동인구'))
+
+me4_0_ck <- sd_clust %>% subset(k_medoids_4 == 0)
+me4_1_ck <- sd_clust %>% subset(k_medoids_4 == 1)
+me4_2_ck <- sd_clust %>% subset(k_medoids_4 == 2)
+me4_3_ck <- sd_clust %>% subset(k_medoids_4 == 3)
+
+write.csv(me4_0_ck, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/0번 클러스터.csv', row.names = F, fileEncoding = 'cp949')
+write.csv(me4_1_ck, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/1번 클러스터.csv', row.names = F, fileEncoding = 'cp949')
+write.csv(me4_2_ck, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/2번 클러스터.csv', row.names = F, fileEncoding = 'cp949')
+write.csv(me4_3_ck, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/3번 클러스터.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+```{r}
+nm_0 <- me4_0[c(order(-me4_0$유동인구)), ][1:2, 1]
+nm_1 <- me4_1[c(order(-me4_1$유동인구)), ][1:2, 1]
+nm_2 <- me4_2[c(order(-me4_2$유동인구)), ][1:2, 1]
+nm_3 <- me4_3[c(order(-me4_3$유동인구)), ][1:2, 1]
+
+result_p <- sd_clust %>% 
+  filter(시장명 %in% c(nm_0, nm_1, nm_2, nm_3)) %>% 
+  subset(select = -c(k_means_2, k_means_3, k_medoids_3, k_medoids_5)) %>% 
+  select('시장명', '유동인구', '개설년도', '운영중인.점포.계...빈점포.', '매장면적...', '종사자.수.명.', '주차.면수', '용도지역_일반상업', '용도지역_일반전용주거', '용도지역_전용주거', '용도지역_준전용주거', 'k_medoids_4')
+```
+
+```{r}
+write.csv(result_p, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/result_data_pp.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+#### 모든 데이터 다 있는 파일
+```{r}
+all_df <- read.csv('D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/클러스터 직전_ver1.csv', header = T, fileEncoding = 'cp949')
+
+all_df['k_medoids_4'] = sd_clust['k_medoids_4']
+
+result_all_p <- all_df %>% filter(시장명 %in% c(nm_0, nm_1, nm_2, nm_3))
+
+write.csv(result_all_p, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/result_all_data_pp.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+
+### 클러스터별 시장명_종사자수
+```{r}
+me4_0_w <- sd_clust %>% subset(k_medoids_4 == 0) %>% subset(select = c('시장명', '종사자.수.명.'))
+me4_1_w <- sd_clust %>% subset(k_medoids_4 == 1) %>% subset(select = c('시장명', '종사자.수.명.'))
+me4_2_w <- sd_clust %>% subset(k_medoids_4 == 2) %>% subset(select = c('시장명', '종사자.수.명.'))
+me4_3_w <- sd_clust %>% subset(k_medoids_4 == 3) %>% subset(select = c('시장명', '종사자.수.명.'))
+```
+
+```{r}
+nm_0_w <- me4_0_w[c(order(-me4_0_w$종사자.수.명.)), ][1:2, 1]
+nm_1_w <- me4_1_w[c(order(-me4_1_w$종사자.수.명.)), ][1:2, 1]
+nm_2_w <- me4_2_w[c(order(-me4_2_w$종사자.수.명.)), ][1:2, 1]
+nm_3_w <- me4_3_w[c(order(-me4_3_w$종사자.수.명.)), ][1:2, 1]
+
+result_w <- sd_clust %>% 
+  filter(시장명 %in% c(nm_0_w, nm_1_w, nm_2_w, nm_3_w)) %>% 
+  subset(select = -c(k_means_2, k_means_3, k_medoids_3, k_medoids_5)) %>% 
+  select('시장명', '유동인구', '개설년도', '운영중인.점포.계...빈점포.', '매장면적...', '종사자.수.명.', '주차.면수', '용도지역_일반상업', '용도지역_일반전용주거', '용도지역_전용주거', '용도지역_준전용주거', 'k_medoids_4')
+```
+
+```{r}
+write.csv(result_w, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/result_data_w.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+#### 모든 데이터 다 있는 파일
+```{r}
+result_all_w <- all_df %>% filter(시장명 %in% c(nm_0_w, nm_1_w, nm_2_w, nm_3_w))
+
+write.csv(result_all_w, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/result_all_data_w.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+
+### 클러스터별 시장명_매장
+```{r}
+me4_0_s <- sd_clust %>% subset(k_medoids_4 == 0) %>% subset(select = c('시장명', '운영중인.점포.계...빈점포.'))
+me4_1_s <- sd_clust %>% subset(k_medoids_4 == 1) %>% subset(select = c('시장명', '운영중인.점포.계...빈점포.'))
+me4_2_s <- sd_clust %>% subset(k_medoids_4 == 2) %>% subset(select = c('시장명', '운영중인.점포.계...빈점포.'))
+me4_3_s <- sd_clust %>% subset(k_medoids_4 == 3) %>% subset(select = c('시장명', '운영중인.점포.계...빈점포.'))
+```
+
+```{r}
+nm_0_s <- me4_0_s[c(order(-me4_0_s$운영중인.점포.계...빈점포.)), ][1:2, 1]
+nm_1_s <- me4_1_s[c(order(-me4_1_s$운영중인.점포.계...빈점포.)), ][1:2, 1]
+nm_2_s <- me4_2_s[c(order(-me4_2_s$운영중인.점포.계...빈점포.)), ][1:2, 1]
+nm_3_s <- me4_3_s[c(order(-me4_3_s$운영중인.점포.계...빈점포.)), ][1:2, 1]
+
+result_s <- sd_clust %>% 
+  filter(시장명 %in% c(nm_0_s, nm_1_s, nm_2_s, nm_3_s)) %>% 
+  subset(select = -c(k_means_2, k_means_3, k_medoids_3, k_medoids_5)) %>% 
+  select('시장명', '유동인구', '개설년도', '운영중인.점포.계...빈점포.', '매장면적...', '종사자.수.명.', '주차.면수', '용도지역_일반상업', '용도지역_일반전용주거', '용도지역_전용주거', '용도지역_준전용주거', 'k_medoids_4')
+```
+
+```{r}
+write.csv(result_s, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/result_data_s.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+#### 모든 데이터 다 있는 파일
+```{r}
+result_all_s <- all_df %>% filter(시장명 %in% c(nm_0_s, nm_1_s, nm_2_s, nm_3_s))
+
+write.csv(result_all_s, 'D:/Users/ChaeSoYeon/Desktop/부산공모전 준비/result_all_data_s.csv', row.names = F, fileEncoding = 'cp949')
+```
+
+
+# k_medoids = 5일때
+
+## 용도지역
+```{r}
+plot3 <- sd_clust %>% select(starts_with('용도지역_'))
+plot3$k_medoids_5 <- sd_clust$k_medoids_5
+
+live_5 <- plot3 %>% group_by(k_medoids_5) %>%
+  summarise('일반상업' = sum(용도지역_일반상업),
+            '일반전용주거' = sum(용도지역_일반전용주거),
+            '전용주거' = sum(용도지역_전용주거),
+            '준전용주거' = sum(용도지역_준전용주거)) %>%
+  as.matrix() %>% t() %>% 
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+```{r}
+barplot(as.matrix(live_5[, c('0','1','2', '3', '4')]), beside = T, col = sequential_hcl(4, 'Plasma'))
+
+legend('topright', legend = dimnames(live_5)[[1]], fill = sequential_hcl(4, 'Plasma'), border = 'white', cex = 0.7)
+
+title(main = '클러스터별 용도지역 분포',
+      sub = 'k-medoids = 5')
+```
+
+## 유동인구
+```{r}
+pp_5 <- sd_clust %>% select(유동인구, k_medoids_5)
+
+people_5 <- pp_5 %>% group_by(k_medoids_5) %>%
+  summarise('평균유동인구' = mean(유동인구)) %>% 
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 주차면수
+```{r}
+car_pk_5 <- sd_clust %>% select(주차.면수, k_medoids_5) 
+
+parking_5 <- car_pk_5 %>% group_by(k_medoids_5) %>%
+  summarise('평균주차면수' = mean(주차.면수))%>% 
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 매장면적
+```{r}
+st_5 <- sd_clust %>% select(매장면적..., k_medoids_5)
+
+store_5 <- st_5 %>% group_by(k_medoids_5) %>%
+  summarise('평균매장면적' = mean(매장면적...)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+``` 
+
+## 종사자수
+```{r}
+wk_5 <- sd_clust %>% select(종사자.수.명., k_medoids_5)
+
+worker_5 <- wk_5 %>% group_by(k_medoids_5)%>%
+  summarise('평균종사자수' = mean(종사자.수.명.)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+## 운영중인 매장 수
+```{r}
+op_5 <- sd_clust %>% select(운영중인.점포.계...빈점포., k_medoids_5)
+
+open_5  <- op_5 %>% group_by(k_medoids_5)%>%
+  summarise('평균매장수' = mean(운영중인.점포.계...빈점포.)) %>%
+  as.matrix() %>% t() %>%
+  as.data.frame() %>% row_to_names(row_number = 1)
+```
+
+```{r}
+par(mfrow = c(2,3))
+barplot(as.matrix(people_5[, c('0', '1','2','3', '4')]), beside = T, col = c('grey', 'grey', 'grey', 'grey', 'blue'), main = '클러스터별 평균유동인구수', sub = 'k-medoids = 5')
+barplot(as.matrix(parking_5[, c('0', '1','2','3', '4')]), beside = T, col = c('grey','blue', 'grey', 'grey', 'grey'), main= '클러스터별 평균주차면적', sub = 'k-medoids = 5')
+barplot(as.matrix(store_5[, c('0', '1','2','3', '4')]), beside = T, col = c('grey', 'grey', 'grey', 'grey', 'blue'), main = '클러스터별 평균매장면적', sub = 'k-medoids = 5')
+barplot(as.matrix(worker_5[, c('0', '1','2','3', '4')]), beside = T, col = c('blue', 'grey', 'grey', 'grey', 'grey'), main = '클러스터별 평균종사자수', sub = 'k-medoids = 5')
+barplot(as.matrix(open_5[, c('0', '1','2', '3', '4')]), beside = T, col = c('blue', 'grey', 'grey', 'grey', 'grey'), main = '클러스터별 평균매장수', sub = 'k-medoids = 5')
+```
+
+## 클러스터별 시장명
+```{r}
+me5_0 <- sd_clust %>% subset(k_medoids_5 == 0) %>% subset(select = c('시장명'))
+me5_1 <- sd_clust %>% subset(k_medoids_5 == 1) %>% subset(select = c('시장명'))
+me5_2 <- sd_clust %>% subset(k_medoids_5 == 2) %>% subset(select = c('시장명'))
+me5_3 <- sd_clust %>% subset(k_medoids_5 == 3) %>% subset(select = c('시장명'))
+me5_4 <- sd_clust %>% subset(k_medoids_5 == 4) %>% subset(select = c('시장명'))
+```
